@@ -651,9 +651,22 @@ body.theme-classico-scuro {
   line-height: 1.5;
 }
 
-.copy-btn { top: 0.5rem; }
+/* Icone di copia ancorate al fondo del box: con molti CF la pagina scorre in modo che
+   il pulsante "Genera" resti fermo, quindi le icone restano vicine al pulsante */
+.copy-btn { top: auto; bottom: 0.6rem; }
+.copy-tooltip { bottom: 3rem; right: 0.6rem; }
 
 #scroll-spacer { flex: none; height: 0; width: 1px; }
 
 /* La card parte dall'alto e cresce verso il basso (il pulsante resta fermo grazie allo scroll) */
 body { justify-content: flex-start; padding-top: clamp(4.5rem, 20vh, 12rem); }
+
+/* ============================================================
+   PULSANTE "COPIA TUTTI I DATI" (accanto al pulsante copia CF)
+   ============================================================ */
+
+.copy-btn.copy-all-btn { right: 3rem; }
+.copy-btn.copy-all-btn svg { width: 19px; height: 19px; }
+
+/* spazio a destra per le due icone */
+#cf-output { padding-right: 6.2rem !important; }

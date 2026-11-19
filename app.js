@@ -165,9 +165,10 @@ function calcolaCarattereControllo(cf15) {
 // ── Generatore principale ────────────────────────────────────────────────────
 
 /**
- * Genera un codice fiscale italiano casuale valido secondo le regole ufficiali
+ * Genera una persona casuale e il relativo codice fiscale, valido secondo le
+ * regole ufficiali. Restituisce { nome, cognome, sesso, data, luogo, cf }.
  */
-function generaCodiceFiscale() {
+function generaPersona() {
   const sesso = Math.random() < 0.5 ? 'M' : 'F';
   const nome    = sesso === 'M' ? rand(NOMI_M) : rand(NOMI_F);
   const cognome = rand(COGNOMI);
@@ -194,7 +195,30 @@ function generaCodiceFiscale() {
   const cf15 = parteCognome + parteNome + parteAnno + parteMese + parteGiorno + parteComune;
   const carattereControllo = calcolaCarattereControllo(cf15);
 
-  return cf15 + carattereControllo;
+  const data = String(giorno).padStart(2, '0') + "/" +
+               String(mese).padStart(2, '0') + "/" + anno;
+
+  return {
+    nome,
+    cognome,
+    sesso,
+    data,                 // gg/mm/aaaa
+    luogo: comune.nome,   // denominazione dal file COMUNI.csv
+    cf: cf15 + carattereControllo
+  };
+}
+
+/** Solo il codice fiscale (compatibilità) */
+function generaCodiceFiscale() {
+  return generaPersona().cf;
+}
+
+/**
+ * Riga "tutti i dati" per Excel: campi separati da tab, senza etichette.
+ * Ordine colonne: nome, cognome, sesso, data di nascita, luogo di nascita, CF.
+ */
+function rigaDati(p) {
+  return [p.nome, p.cognome, p.sesso, p.data, p.luogo, p.cf].join("\t");
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -228,6 +252,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const output   = document.getElementById("cf-output");
   const genBtn   = document.getElementById("gen-btn");
   const copyBtn  = document.getElementById("copy-btn");
+  const copyAllBtn = document.getElementById("copy-all-btn");
   const tooltip  = document.getElementById("copy-tooltip");
   const slider   = document.getElementById("theme-slider");
 
@@ -239,6 +264,7 @@ document.addEventListener("DOMContentLoaded", () => {
   slider.max = THEMES.length - 1;
 
   let altezzaSpacer = 0; // spazio aggiunto in fondo per consentire lo scorrimento
+  let persone = [];      // persone generate (una per riga del box CF); i dati non sono visualizzati
 
   function righe() {
     return output.value === "" ? [] : output.value.split("\n");
@@ -278,6 +304,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Riporta la pagina allo stato iniziale: box vuoto, nessuno spazio extra, scroll in cima
   function ripristinaStatoIniziale() {
+    persone = [];
     output.value = "";
     output.classList.remove("has-value");
     output.style.height = "";
@@ -304,11 +331,12 @@ document.addEventListener("DOMContentLoaded", () => {
     this.appendChild(ripple);
     setTimeout(() => ripple.remove(), 600);
 
-    const cf = generaCodiceFiscale();
+    const persona = generaPersona();
 
     mantieniPulsanteFermo(() => {
-      // Con "Conserva" attivo il nuovo CF va a capo nel box, altrimenti lo sostituisce
-      output.value = (keepBox.checked && output.value !== "") ? output.value + "\n" + cf : cf;
+      // Con "Conserva" attivo la nuova persona si aggiunge alla lista, altrimenti la sostituisce
+      persone = (keepBox.checked && persone.length) ? persone.concat(persona) : [persona];
+      output.value = persone.map(p => p.cf).join("\n");
       output.classList.add("has-value");
       adattaAltezza();
     });
@@ -316,23 +344,39 @@ document.addEventListener("DOMContentLoaded", () => {
     aggiornaContatore();
   });
 
-  // Copia negli appunti: copia il contenuto del box, poi lo svuota e riporta la pagina all'inizio
-  copyBtn.addEventListener("click", () => {
-    if (!output.value) return;
-    const testo = output.value;
+  // Scrive negli appunti (con fallback per browser senza Clipboard API)
+  function scriviAppunti(testo) {
+    return navigator.clipboard.writeText(testo).catch(() => {
+      const ta = document.createElement("textarea");
+      ta.value = testo;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      ta.remove();
+    });
+  }
 
-    const fatto = () => {
+  // Copia il testo, poi svuota il box e riporta la pagina allo stato iniziale
+  function copiaERipristina(testo) {
+    scriviAppunti(testo).then(() => {
       tooltip.classList.add("show");
       setTimeout(() => tooltip.classList.remove("show"), 1500);
       ripristinaStatoIniziale();
-    };
-
-    navigator.clipboard.writeText(testo).then(fatto).catch(() => {
-      // Fallback per browser senza Clipboard API
-      output.select();
-      document.execCommand("copy");
-      fatto();
     });
+  }
+
+  // Copia "normale": solo i CF, uno per riga
+  copyBtn.addEventListener("click", () => {
+    if (!persone.length) return;
+    copiaERipristina(persone.map(p => p.cf).join("\n"));
+  });
+
+  // Copia "tutti i dati": una riga per persona, campi separati da tab (incollabile in Excel)
+  copyAllBtn.addEventListener("click", () => {
+    if (!persone.length) return;
+    copiaERipristina(persone.map(rigaDati).join("\n"));
   });
 
   // Selezione automatica al click sul campo

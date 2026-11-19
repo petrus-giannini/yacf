@@ -26,7 +26,13 @@
       <label class="field-label" for="cf-output">CF</label>
       <div class="cf-wrapper">
         <textarea id="cf-output" rows="1" wrap="off" spellcheck="false" placeholder="—— —— —— —— —— —" readonly></textarea>
-        <button class="copy-btn" id="copy-btn" title="Copia negli appunti" aria-label="Copia">
+        <button class="copy-btn copy-all-btn" id="copy-all-btn" title="Copia tutti i dati (separati da tab, per Excel)" aria-label="Copia tutti i dati">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="16" rx="2"/>
+            <path d="M3 10h18M3 15h18M9 4v16"/>
+          </svg>
+        </button>
+        <button class="copy-btn" id="copy-btn" title="Copia solo i CF" aria-label="Copia CF">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
