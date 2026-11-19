@@ -1,6 +1,6 @@
-## RANDOM CF ##
+## YACF ##
 
-yet another random italian fiscal code generator
+Yet Another random italian *Codice Fiscale* generator
 
 
 
